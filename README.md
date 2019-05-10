@@ -44,3 +44,5 @@
 ###  mobilefacenet项目转成caffe格式
 
 同mobilefacenet++项目项目，但是transformer.py文件需要修改为本项目的文件
+
+#### ps:prototxt可能会有一些小错误，需要手动根据netscope可视化效果来更改
