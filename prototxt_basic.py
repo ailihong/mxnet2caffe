@@ -29,10 +29,11 @@ def Convolution(txt_file, info):
     #bias_term = 'true'  
   #if info['top'] == 'conv1_1':
     #pprint.pprint(info)  
+  # print('\n-------debug----------\n',info,'\n-------debug----------\n')
   if fuzzy_haskey(info['params'], 'bias'):
-    bias_term = 'true'  
+    bias_term = 'true'
   elif 'no_bias' in info[attrstr] and info['attrs']['no_bias'] == 'True':
-    bias_term = 'false'  
+    bias_term = 'false'
   else:
     bias_term = 'true'
   txt_file.write('layer {\n')
@@ -41,15 +42,16 @@ def Convolution(txt_file, info):
   txt_file.write('	name: "%s"\n'         % info['top'])
   txt_file.write('	type: "Convolution"\n')
   txt_file.write('	convolution_param {\n')
-  txt_file.write('		num_output: %s\n'   % info[attrstr]['num_filter'])
-  txt_file.write('		kernel_size: %s\n'  % info[attrstr]['kernel'].split('(')[1].split(',')[0]) # TODO
-  if 'pad' in info[attrstr]:
-    txt_file.write('		pad: %s\n'          % info[attrstr]['pad'].split('(')[1].split(',')[0]) # TODO
-  if 'num_group' in info[attrstr]  and int(info[attrstr]['num_group']) != 1:
-    txt_file.write('		group: %s\n'        % info[attrstr]['num_group'])
+  attrstr_ = 'param'
+  txt_file.write('		num_output: %s\n'   % info[attrstr_]['num_filter'])
+  txt_file.write('		kernel_size: %s\n'  % info[attrstr_]['kernel'].split('(')[1].split(',')[0]) # TODO
+  if 'pad' in info[attrstr_]:
+    txt_file.write('		pad: %s\n'          % info[attrstr_]['pad'].split('(')[1].split(',')[0]) # TODO
+  if 'num_group' in info[attrstr_]  and int(info[attrstr_]['num_group']) != 1:
+    txt_file.write('		group: %s\n'        % info[attrstr_]['num_group'])
     txt_file.write('            engine:CAFFE\n')
-  if 'stride' in info[attrstr]:
-    txt_file.write('		stride: %s\n'       % info[attrstr]['stride'].split('(')[1].split(',')[0])
+  if 'stride' in info[attrstr_]:
+    txt_file.write('		stride: %s\n'       % info[attrstr_]['stride'].split('(')[1].split(',')[0])
   txt_file.write('		bias_term: %s\n'    % bias_term)
   txt_file.write('	}\n')
   if 'share' in info.keys() and info['share']:  
@@ -103,12 +105,15 @@ def Activation(txt_file, info):
   pass
 
 def Concat(txt_file, info):
+  # print('\n-------debug----------\n',info,'\n-------debug----------\n')
+  attrstr_ = 'param'
   txt_file.write('layer {\n')
   txt_file.write('  name: "%s"\n'         % info['top'])
   txt_file.write('  type: "Concat"\n')
   for bottom_i in info['bottom']:
     txt_file.write('  bottom: "%s"\n'     % bottom_i)
   txt_file.write('  top: "%s"\n'          % info['top'])
+  txt_file.write('  concat_param { \n axis: %s\n }\n'          % info[attrstr_]['dim'])
   txt_file.write('}\n')
   txt_file.write('\n')
   pass
@@ -126,7 +131,9 @@ def ElementWiseSum(txt_file, info):
   pass
 
 def Pooling(txt_file, info):
-  pool_type = 'AVE' if info[attrstr]['pool_type'] == 'avg' else 'MAX'
+  attrstr_='param'
+  # print('\n-------debug----------\n',info,'\n-------debug----------\n')
+  pool_type = 'AVE' if info[attrstr_]['pool_type'] == 'avg' else 'MAX'
   txt_file.write('layer {\n')
   txt_file.write('  bottom: "%s"\n'       % info['bottom'][0])
   txt_file.write('  top: "%s"\n'          % info['top'])
@@ -134,24 +141,24 @@ def Pooling(txt_file, info):
   txt_file.write('  type: "Pooling"\n')
   txt_file.write('  pooling_param {\n')
   txt_file.write('    pool: %s\n'         % pool_type)       # TODO
-  txt_file.write('    kernel_size: %s\n'  % info[attrstr]['kernel'].split('(')[1].split(',')[0])
+  txt_file.write('    kernel_size: %s\n'  % info[attrstr_]['kernel'].split('(')[1].split(',')[0])
   #txt_file.write('    stride: %s\n'       % info[attrstr]['stride'].split('(')[1].split(',')[0])
-  if 'pad' in info[attrstr]:
-    txt_file.write('    pad: %s\n'          % info[attrstr]['pad'].split('(')[1].split(',')[0])
+  if 'pad' in info[attrstr_]:
+    txt_file.write('    pad: %s\n'          % info[attrstr_]['pad'].split('(')[1].split(',')[0])
   txt_file.write('  }\n')
   txt_file.write('}\n')
   txt_file.write('\n')
   pass
 
-
 def FullyConnected(txt_file, info):
+  attrstr_='param'
   txt_file.write('layer {\n')
   txt_file.write('  bottom: "%s"\n'     % info['bottom'][0])
   txt_file.write('  top: "%s"\n'        % info['top'])
   txt_file.write('  name: "%s"\n'       % info['top'])
   txt_file.write('  type: "InnerProduct"\n')
   txt_file.write('  inner_product_param {\n')
-  txt_file.write('    num_output: %s\n' % info[attrstr]['num_hidden'])
+  txt_file.write('    num_output: %s\n' % info[attrstr_]['num_hidden'])
   txt_file.write('  }\n')
   txt_file.write('}\n')
   txt_file.write('\n')
@@ -160,8 +167,14 @@ def FullyConnected(txt_file, info):
 def Flatten(txt_file, info):
   pass
   
-def SoftmaxOutput(txt_file, info):
-  pass
+def Softmax(txt_file, info):
+  txt_file.write('layer {\n')
+  txt_file.write('  bottom: "%s"\n'     % info['bottom'][0])
+  txt_file.write('  top: "%s"\n'        % info['top'])
+  txt_file.write('  name: "%s"\n'       % info['top'])
+  txt_file.write('  type: "Softmax"\n')
+  txt_file.write('}\n')
+  txt_file.write('\n')
 
 def LeakyReLU(txt_file, info):
   if info[attrstr]['act_type'] == 'elu':
@@ -222,7 +235,7 @@ def write_node(txt_file, info):
     elif info['op'] == 'FullyConnected':
         FullyConnected(txt_file, info)
     elif info['op'] == 'SoftmaxOutput':
-        SoftmaxOutput(txt_file, info)
+        Softmax(txt_file, info)
     elif info['op'] == 'LeakyReLU':
         LeakyReLU(txt_file, info)
     elif info['op'] == 'elemwise_add':
